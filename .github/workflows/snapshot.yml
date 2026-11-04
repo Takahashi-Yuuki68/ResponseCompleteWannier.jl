@@ -1,0 +1,35 @@
+name: snapshot
+on:
+  workflow_dispatch:
+
+jobs:
+  snap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build txt
+        shell: bash
+        run: |
+          set -e
+          OUT="snapshot_llm.txt"
+          : > "$OUT"
+
+          echo "===== FILE: Project.toml =====" >> "$OUT"
+          cat Project.toml >> "$OUT" 2>/dev/null || echo "[not found]" >> "$OUT"
+          echo "" >> "$OUT"
+
+          for d in src docs test examples example; do
+            [ -d "$d" ] || continue
+            find "$d" -type f -name "*.jl" | sort | while read -r f; do
+              echo "" >> "$OUT"
+              echo "===== FILE: $f =====" >> "$OUT"
+              cat "$f" >> "$OUT"
+            done
+          done
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: snapshot-${{ github.sha }}
+          path: snapshot_llm.txt
+          retention-days: 30
