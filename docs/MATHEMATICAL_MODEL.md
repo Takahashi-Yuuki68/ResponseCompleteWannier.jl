@@ -142,3 +142,36 @@ shift `H_ROM-zI`. The eliminated Schur operator itself remains
 frequency-dependent. This algebraic structure is necessary, but not
 sufficient, to establish that a particular multi-shift Krylov implementation
 is valid or efficient. No multi-shift solver is implemented here.
+
+## 10. Auxiliary-rank convergence and comparison
+
+**[KNOWN]** `select_auxiliary_rank` selects the smallest sampled SVD rank
+whose cumulative squared-singular-value capture reaches a requested target.
+The zero target and zero-residual cases return rank zero. The convergence
+routine compares each reduced solution with the exact algebraic Schur
+solution and reports absolute and relative vector errors. It does not assume
+that errors are monotone in rank.
+
+**[PROPOSED]** `build_response_complement_schur_model` connects response
+residual SVD vectors to a Schur auxiliary model. This connection is an
+algebraic API only. It does not identify `B`, `D`, `W`, or the response
+columns with physical DFTK or Wannier/MRWF objects.
+
+The response-complement basis `Q` has the same ambient row-space
+representation as the input response columns. When it is passed to
+`reduce_schur(B, D, Q)`, that ambient basis must also be the eliminated
+space represented by `D`; consequently,
+`size(responses, 1) == size(D, 1) == size(B, 2)` is required. A physical
+adapter must explicitly project or transform between spaces before invoking
+this algebraic API.
+
+## 11. Dielectric reference data
+
+**[KNOWN]** The reference loader accepts the checked-in eight-column sampled
+format and compares complex dielectric samples on an identical frequency
+grid. Its peak is explicitly a sampled maximum of `Im(epsilon)`, not a claim
+about a continuously converged local maximum.
+
+**[APPROXIMATION]** A finite sampled comparison and RMS/max errors cannot
+establish agreement between physical PW and Wannier/MRWF response functions
+outside the supplied grid.

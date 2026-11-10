@@ -46,3 +46,28 @@ function compress_response_residual(residuals::AbstractMatrix;
         collect(cumulative_capture),
     )
 end
+
+"""
+    select_auxiliary_rank(complement; capture_target)
+
+Return the smallest number of response-complement vectors whose cumulative
+captured squared residual norm reaches `capture_target`. The target must be
+between zero and one, inclusive. A zero target or a zero residual returns
+zero.
+"""
+function select_auxiliary_rank(complement::ResponseComplement;
+                               capture_target::Real)
+    isfinite(capture_target) ||
+        throw(ArgumentError("capture_target must be finite"))
+    0 <= capture_target <= 1 ||
+        throw(ArgumentError("capture_target must be between zero and one"))
+    capture_target == 0 && return 0
+    if isempty(complement.singular_values) ||
+       all(iszero, complement.singular_values)
+        return 0
+    end
+
+    rank = findfirst(>=(capture_target), complement.cumulative_capture)
+    isnothing(rank) && return length(complement.cumulative_capture)
+    return rank
+end
